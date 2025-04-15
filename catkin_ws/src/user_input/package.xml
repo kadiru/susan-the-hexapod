@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>user_input</name>
+  <version>0.0.0</version>
+  <description>The user_input package, which reads in user input from a joystick device, and publishes motion commands for the locomotion algorithm package to interpret.</description>
+
+  <maintainer email="mjsanz@andrew.cmu.edu">Matthew Saenz</maintainer>
+
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>joy</build_depend>
+  <build_depend>rospy</build_depend>
+  <build_export_depend>joy</build_export_depend>
+  <build_export_depend>rospy</build_export_depend>
+  <exec_depend>joy</exec_depend>
+  <exec_depend>rospy</exec_depend>
+  <build_depend>message_generation</build_depend>
+  <exec_depend>message_runtime</exec_depend>
+
+  <export>
+
+  </export>
+</package>

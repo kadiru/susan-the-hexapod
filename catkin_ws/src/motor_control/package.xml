@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>motor_control</name>
+  <version>0.0.0</version>
+  <description>The motor_control package, which contains the scripts to communicate motor commands to each Arduino.</description>
+
+  <maintainer email="mjsaenz@andrew.andrew.cmu.edu">Matthew Saenz</maintainer>
+
+
+  <license>BSD</license>
+  <url type="website">http://sites.google.com/andrew.cmu.edu/cmumechatronics2024team2</url>
+
+
+  <author email="mjsaenz@andrew.cmu.edu">Matthew Saenz</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>message_generation</build_depend>
+  <build_depend>message_runtime</build_depend>
+  <build_export_depend>rospy</build_export_depend>
+  <build_export_depend>std_msgs</build_export_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>message_runtime</exec_depend>
+  <exec_depend>message_generation</exec_depend>
+
+
+  <!-- The export tag contains other, unspecified, tags -->
+  <export>
+    <!-- Other tools can request additional information be placed here -->
+
+  </export>
+</package>
