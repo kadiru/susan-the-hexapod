@@ -1,0 +1,47 @@
+motor 1 -> uno (green) -- arduino 2
+	DIR_2 -> Blue  -> 7
+	PUL_2 -> Green -> 2
+	RPWM_Output_2 -> Purple -> 6
+	LPWM_Output_2 -> Blue   -> 5
+	R_EN_2 -> white  -> 4
+	L_EN_2 -> orange -> 3
+
+motor 2 -> uno r3 (black) -- arduino 3
+	DIR_1 -> Blue  -> 9
+	PUL_1 -> Green -> 8
+	RPWM_Output_1 -> Green  -> 10
+	LPWM_Output_1 -> Yellow -> 11
+	R_EN_1 -> purple -> 13
+	L_EN_1 -> blue   -> 12
+
+motor 3 -> uno r3 (black) -- arduino 3
+	DIR_2 -> Blue  -> 7
+	PUL_2 -> Green -> 2
+	RPWM_Output_2 -> Purple -> 6
+	LPWM_Output_2 -> Blue   -> 5
+	R_EN_2 -> purple -> 4
+	L_EN_2 -> blue   -> 3
+
+motor 6 -> uno (green) -- arduino 2
+	DIR_1 -> Blue  -> 22
+	PUL_1 -> Green -> 23
+	RPWM_Output_1 -> Green  -> 11
+	LPWM_Output_1 -> Yellow -> 10
+	R_EN_1 -> darker  white -> 13
+	L_EN_1 -> lighter white -> 12
+
+motor 5 -> mega r3 (blue) -- arduino 1
+	DIR_2 -> Blue  -> 52
+	PUL_2 -> Green -> 53
+	RPWM_Output_2 -> Purple -> 9
+	LPWM_Output_2 -> Blue   -> 8
+	R_EN_2 -> green  -> 26
+	L_EN_2 -> yellow -> 27
+
+motor 4 -> mega r3 (blue) -- arduino 1
+	DIR_1 -> Blue  -> 22
+	PUL_1 -> Green -> 23
+	RPWM_Output_1 -> Green  -> 11
+	LPWM_Output_1 -> Yellow -> 10 -- was connected as 13
+	R_EN_1 -> white -> 24
+	L_EN_1 -> white -> 25
