@@ -1,0 +1,11 @@
+General Instructions to run the robot:
+
+NOTE: After assembling the robot I highly recommend keeping it on a platform such that the legs don't touch the ground but are still free to move. This is to test if everything works as it is supposed to.
+
+HOW TO RUN
+1) In the terminal, in the ~/catkin_ws/ directory, run 'catkin_make', then 'source ./devel/setup.bash', then 'roscore'.
+2) Open a new terminal in the ~/catkin_ws/ directory, run 'source ./devel/setup.bash', then 'rosrun joy joy_node _autorepeat_rate:=1.0' to begin publishing the joystick state.
+3) Open a new terminal in the ~/catkin_ws/ directory, run 'source ./devel/setup.bash', then 'rosrun user_input user_input_pub_digital_input.py' to control the robot through d-pad. Press 'up key' to move the robot forward, down to move it backwards, left key to turn left and right to turn right.
+4) With power disconnected from the motors, ensure all legs are perpendicular to the robot frame.
+5) Open a new terminal in the ~/catkin_ws/ directory, run 'source ./devel/setup.bash', then rosrun motor_control motor_control_open_loop_v2.py to begin communication with the Arduinos. When the motors are powered, they will begin to respond to user input.
+
