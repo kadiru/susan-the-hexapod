@@ -154,14 +154,14 @@ void loop() {
       digitalWrite(L_EN_2, HIGH);
       delay(lin_act_time);
 
-    }else if (userInput.equals("rq")){
+    }else if (userInput.equals("qr")){
       // retract 2
       analogWrite(RPWM_Output_2, 255);
       analogWrite(LPWM_Output_2, 0);
       digitalWrite(R_EN_2, HIGH);
       digitalWrite(L_EN_2, HIGH);
 
-      delay(500);
+      //delay(500);
       
       analogWrite(RPWM_Output_1, 0);
       analogWrite(LPWM_Output_1, 255);
