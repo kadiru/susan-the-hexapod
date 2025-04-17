@@ -86,28 +86,28 @@ void loop() {
       analogWrite(LPWM_Output_1, 255);
       digitalWrite(R_EN_1, HIGH);
       digitalWrite(L_EN_1, HIGH);
-      delay(lin_act_time);
+      // delay(lin_act_time);
     } else if(userInput.equals("w")){
       // retract 1
       analogWrite(RPWM_Output_1, 255);
       analogWrite(LPWM_Output_1, 0);
       digitalWrite(R_EN_1, HIGH);
       digitalWrite(L_EN_1, HIGH);
-      delay(lin_act_time);
+      // delay(lin_act_time);
     } else if(userInput.equals("e")){
       // extend 2
       analogWrite(RPWM_Output_2, 0);
       analogWrite(LPWM_Output_2, 255);
       digitalWrite(R_EN_2, HIGH);
       digitalWrite(L_EN_2, HIGH);
-      delay(lin_act_time);
+      // delay(lin_act_time);
     } else if (userInput.equals("r")){
       // retract 2
       analogWrite(RPWM_Output_2, 255);
       analogWrite(LPWM_Output_2, 0);
       digitalWrite(R_EN_2, HIGH);
       digitalWrite(L_EN_2, HIGH);
-      delay(lin_act_time);
+      //delay(lin_act_time);
     
     }else if(userInput.equals("qe")){
       // retract 1
