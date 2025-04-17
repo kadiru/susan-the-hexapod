@@ -20,7 +20,7 @@ int stepper_pos_2 = 0;
 int stepper_frd_dir_1 = LOW;
 int stepper_frd_dir_2 = HIGH;
 
-int lin_act_time = 1000;
+int lin_act_time = 750;
 
 int forward_pos = 2400;//5300;//2000;
 int backwards_pos = -2400;//-5300;//-2000;
@@ -131,7 +131,7 @@ void loop() {
       digitalWrite(R_EN_1, HIGH);
       digitalWrite(L_EN_1, HIGH);
       
-      delay(500);
+      //delay(500);
       
       analogWrite(RPWM_Output_2, 0);
       analogWrite(LPWM_Output_2, 255);
