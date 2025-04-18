@@ -4,9 +4,9 @@ import serial
 import time
 from user_input.msg import UserInput
 
-serl12 = serial.Serial('/dev/serial/by-id/usb-Arduino__www.arduino.cc__0042_24333313930351C05231-if00', 115200, timeout=1);
-serl34 = serial.Serial('/dev/serial/by-id/usb-Arduino__www.arduino.cc__0043_85937313837351300250-if00', 115200, timeout=1);
-serl56 = serial.Serial('/dev/serial/by-id/usb-Arduino__www.arduino.cc__0043_85937313637351115182-if00', 115200, timeout=1);
+serl12 = serial.Serial('/dev/serial/by-id/usb-Arduino__www.arduino.cc__0042_24333313930351C05231-if00', 115200, timeout=1); #send45
+serl34 = serial.Serial('/dev/serial/by-id/usb-Arduino__www.arduino.cc__0043_85937313837351300250-if00', 115200, timeout=1); #send61
+serl56 = serial.Serial('/dev/serial/by-id/usb-Arduino__www.arduino.cc__0043_85937313637351115182-if00', 115200, timeout=1); #send23
 
 lin_act_hysteresis = 1
 stepper_time = 3000
@@ -96,28 +96,28 @@ def callback(data):
     #sendAndWait(e1, e1, e1, lin_act_hysteresis)
     #sendAndWait(qe, qe, qe, lin_act_hysteresis)
     
-    #send12AndWait(e1, lin_act_hysteresis) # send12 is actually send45 extends 4
-    #send12AndWait(e2, lin_act_hysteresis) # send12 is actually send45 extends 5
-    #send34AndWait(e1, lin_act_hysteresis) # send34 is actually send61 extends 6
-    #send34AndWait(e2, lin_act_hysteresis) # send34 is actually send61 extends 1
-    #send56AndWait(e1, lin_act_hysteresis) # send56 is actually send23 extends 2
-    #send56AndWait(e2, lin_act_hysteresis) # send56 is actually send23 extends 3    
+    send12AndWait(e1, 1) # send12 is actually send45 extends 4
+    send12AndWait(e2, 1) # send12 is actually send45 extends 5
+    send34AndWait(e1, 1) # send34 is actually send61 extends 6
+    send34AndWait(e2, 1) # send34 is actually send61 extends 1
+    send56AndWait(e1, 1) # send56 is actually send23 extends 2
+    send56AndWait(e2, 1) # send56 is actually send23 extends 3    
     
-    send12AndWait(e2, lin_act_hysteresis) # send12 is actually send45 extends 5
-    send56AndWait(e1, lin_act_hysteresis) # send56 is actually send23 extends 2
+    #send12AndWait(e2, lin_act_hysteresis) # send12 is actually send45 extends 5
+    #send56AndWait(e1, lin_act_hysteresis) # send56 is actually send23 extends 2
     
     #sendAndWait(wr, wr, wr, lin_act_hysteresis)
   if direction == "backwards":
     
-    #send12AndWait(r1, lin_act_hysteresis) # send12 is actually send45 retrieves 4     
-    #send12AndWait(r2, lin_act_hysteresis) # send12 is actually send45 retrieves 5    
-    #send34AndWait(r1, lin_act_hysteresis) # send34 is actually send61 retrieves 6
-    #send34AndWait(r2, lin_act_hysteresis) # send34 is actually send61 retrieves 1
-    #send56AndWait(r1, lin_act_hysteresis) # send56 is actually send23 retrieves 2
-    #send56AndWait(r2, lin_act_hysteresis) # send56 is actually send23 retrieves 3
+    send12AndWait(r1, 1) # send12 is actually send45 retrieves 4     
+    send12AndWait(r2, 1) # send12 is actually send45 retrieves 5    
+    send34AndWait(r1, 1) # send34 is actually send61 retrieves 6
+    send34AndWait(r2, 1) # send34 is actually send61 retrieves 1
+    send56AndWait(r1, 1) # send56 is actually send23 retrieves 2
+    send56AndWait(r2, 1) # send56 is actually send23 retrieves 3
     
-    send12AndWait(r2, lin_act_hysteresis) # send12 is actually send45 retrieves 5
-    send56AndWait(r1, lin_act_hysteresis) # send56 is actually send23 retrieves 2
+    #send12AndWait(r2, lin_act_hysteresis) # send12 is actually send45 retrieves 5
+    #send56AndWait(r1, lin_act_hysteresis) # send56 is actually send23 retrieves 2
 
     #sendAndWait(qe, qe, qe, lin_act_hysteresis)
     #sendAndWait(wr, wr, wr, lin_act_hysteresis)
