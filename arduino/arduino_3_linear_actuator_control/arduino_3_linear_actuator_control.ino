@@ -21,6 +21,7 @@ struct Actuator {
   bool running = false;
   unsigned long startTime = 0;
   unsigned long duration = 0;
+  int pwmSpeed = 255;
   Direction dir = STOPPED;
 
   Actuator(int r_pwm, int l_pwm, int r_en, int l_en) {
@@ -38,24 +39,26 @@ struct Actuator {
     stop();
   }
 
-  void extend(unsigned long dur) {
+  void extend(unsigned long dur, int speed) {
     analogWrite(RPWM, 0);
-    analogWrite(LPWM, 255);
+    analogWrite(LPWM, speed);
     digitalWrite(REN, HIGH);
     digitalWrite(LEN, HIGH);
     startTime = millis();
     duration = dur;
+    pwmSpeed = speed;
     running = true;
     dir = EXTEND;
   }
 
-  void retract(unsigned long dur) {
-    analogWrite(RPWM, 255);
+  void retract(unsigned long dur, int speed) {
+    analogWrite(RPWM, speed);
     analogWrite(LPWM, 0);
     digitalWrite(REN, HIGH);
     digitalWrite(LEN, HIGH);
     startTime = millis();
     duration = dur;
+    pwmSpeed = speed;
     running = true;
     dir = RETRACT;
   }
@@ -63,6 +66,8 @@ struct Actuator {
   void stop() {
     digitalWrite(REN, LOW);
     digitalWrite(LEN, LOW);
+    analogWrite(RPWM, 0);
+    analogWrite(LPWM, 0);
     running = false;
     dir = STOPPED;
   }
@@ -89,21 +94,28 @@ void loop() {
     String input = Serial.readStringUntil('\n');
     input.trim();
 
-    int commaIndex = input.indexOf(',');
-    if (commaIndex > 0) {
-      String command = input.substring(0, commaIndex); // like "e1", "r2"
-      String durationStr = input.substring(commaIndex + 1);
-      int duration = durationStr.toInt();
+    int firstComma = input.indexOf(',');
+    int secondComma = input.indexOf(',', firstComma + 1);
 
-      if (duration >= 100 && duration <= 750) {
-        if (command == "e1") actuator1.extend(duration);
-        else if (command == "r1") actuator1.retract(duration);
-        else if (command == "e2") actuator2.extend(duration);
-        else if (command == "r2") actuator2.retract(duration);
+    if (firstComma > 0 && secondComma > firstComma) {
+      String command = input.substring(0, firstComma);
+      String durationStr = input.substring(firstComma + 1, secondComma);
+      String speedStr = input.substring(secondComma + 1);
+
+      int duration = durationStr.toInt();
+      int speed = speedStr.toInt();
+
+      if (duration >= 100 && duration <= 1000 && speed >= 0 && speed <= 255) {
+        if (command == "e1") actuator1.extend(duration, speed);
+        else if (command == "r1") actuator1.retract(duration, speed);
+        else if (command == "e2") actuator2.extend(duration, speed);
+        else if (command == "r2") actuator2.retract(duration, speed);
         else Serial.println("Invalid command");
       } else {
-        Serial.println("Invalid duration (100–750 ms allowed)");
+        Serial.println("Invalid duration or speed");
       }
+    } else {
+      Serial.println("Invalid input format (expected: cmd,duration,speed)");
     }
   }
 
