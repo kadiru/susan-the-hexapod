@@ -151,44 +151,44 @@ def retrieveall():
     send_command(serial23, 'r2', duration)	
 
 try:
-    extendall()
-    time.sleep(1)  # wait before next duration cycle
+    while True:
+        print("\n--- Gait Control Menu ---")
+        print("1 → Sequential Traveling Wave (seqWaveGait)")
+        print("2 → Symmetric Front↔Back Wave (frontBackSymmetricWaveGait)")
+        print("3 → Extend All")
+        print("4 → Retrieve All")
+        print("5 → Diagonal Pairs")
+        print("q → Quit")
 
-    retrieveall()
-    time.sleep(1)  # wait before next duration cycle
+        choice = input("Enter your choice: ").strip()
 
-    diagonals()
-    time.sleep(1)  # wait before next duration cycle
-    
-    #seqWaveGait(300,150)
-    #time.sleep(1)  # wait before next duration cycle
+        if choice == "1":
+            seqWaveGait()
+        elif choice == "2":
+            frontBackSymmetricWaveGait()
+        elif choice == "3":
+            extendall()
+        elif choice == "4":
+            retrieveall()
+        elif choice == "5":
+            diagonals()
+        elif choice.lower() == "q":
+            print("Exiting gait controller.")
+            break
+        else:
+            print("Invalid input. Try again.")
 
-    #seqWaveGait(500,250)
-    time.sleep(1)  # wait before next duration cycle
-    
-    #seqWaveGait(750,375)
-    time.sleep(1)  # wait before next duration cycle
-    
-    seqWaveGait(300,100)
-    time.sleep(1)  # wait before next duration cycle
+except Exception as e:
+    print(f"Error: {e}")
 
-    seqWaveGait(500,166)
-    time.sleep(1)  # wait before next duration cycle
-    
-    seqWaveGait(750,250)
-    time.sleep(1)  # wait before next duration cycle
-    
-    frontBackSymmetricWaveGait(300, 100)
-    time.sleep(1)  # wait before next duration cycle
+finally:
+    serial45.close()
+    print("Serial45 closed.")
+    serial61.close()
+    print("Serial61 closed.")
+    serial23.close()
+    print("Serial23 closed.")
 
-    frontBackSymmetricWaveGait(500, 166)
-    time.sleep(1)  # wait before next duration cycle
-    
-    frontBackSymmetricWaveGait(750, 250)
-    time.sleep(1)  # wait before next duration cycle
-
-
-    #test()
 
 except Exception as e:
     print(f"Error: {e}")
