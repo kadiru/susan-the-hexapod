@@ -24,6 +24,9 @@ struct Actuator {
   int pwmSpeed = 255;
   Direction dir = STOPPED;
 
+  unsigned long fadeIn = 0;
+  unsigned long fadeOut = 0;
+
   Actuator(int r_pwm, int l_pwm, int r_en, int l_en) {
     RPWM = r_pwm;
     LPWM = l_pwm;
@@ -39,42 +42,72 @@ struct Actuator {
     stop();
   }
 
-  void extend(unsigned long dur, int speed) {
+  void extend(unsigned long dur, int speed, unsigned long fadeInMs = 0, unsigned long fadeOutMs = 0) {
     analogWrite(RPWM, 0);
-    analogWrite(LPWM, speed);
-    digitalWrite(REN, HIGH);
-    digitalWrite(LEN, HIGH);
-    startTime = millis();
-    duration = dur;
-    pwmSpeed = speed;
-    running = true;
-    dir = EXTEND;
-  }
-
-  void retract(unsigned long dur, int speed) {
-    analogWrite(RPWM, speed);
     analogWrite(LPWM, 0);
     digitalWrite(REN, HIGH);
     digitalWrite(LEN, HIGH);
     startTime = millis();
     duration = dur;
     pwmSpeed = speed;
+    fadeIn = fadeInMs;
+    fadeOut = fadeOutMs;
+    running = true;
+    dir = EXTEND;
+  }
+
+  void retract(unsigned long dur, int speed, unsigned long fadeInMs = 0, unsigned long fadeOutMs = 0) {
+    analogWrite(RPWM, 0);
+    analogWrite(LPWM, 0);
+    digitalWrite(REN, HIGH);
+    digitalWrite(LEN, HIGH);
+    startTime = millis();
+    duration = dur;
+    pwmSpeed = speed;
+    fadeIn = fadeInMs;
+    fadeOut = fadeOutMs;
     running = true;
     dir = RETRACT;
   }
 
   void stop() {
-    digitalWrite(REN, LOW);
-    digitalWrite(LEN, LOW);
     analogWrite(RPWM, 0);
     analogWrite(LPWM, 0);
+    digitalWrite(REN, LOW);
+    digitalWrite(LEN, LOW);
     running = false;
     dir = STOPPED;
   }
 
   void update() {
-    if (running && millis() - startTime >= duration) {
+    if (!running) return;
+
+    unsigned long now = millis();
+    unsigned long elapsed = now - startTime;
+
+    if (elapsed >= duration) {
       stop();
+      return;
+    }
+
+    int outputSpeed = pwmSpeed;
+
+    if (fadeIn > 0 && elapsed < fadeIn) {
+      float t = (float)elapsed / fadeIn;
+      outputSpeed = (int)(pwmSpeed * t * t);
+    } else if (fadeOut > 0 && elapsed > (duration - fadeOut)) {
+      float t = (float)(duration - elapsed) / fadeOut;
+      outputSpeed = (int)(pwmSpeed * t * t);
+    }
+
+    outputSpeed = constrain(outputSpeed, 0, 255);
+
+    if (dir == EXTEND) {
+      analogWrite(RPWM, 0);
+      analogWrite(LPWM, outputSpeed);
+    } else if (dir == RETRACT) {
+      analogWrite(RPWM, outputSpeed);
+      analogWrite(LPWM, 0);
     }
   }
 };
@@ -94,28 +127,44 @@ void loop() {
     String input = Serial.readStringUntil('\n');
     input.trim();
 
-    int firstComma = input.indexOf(',');
-    int secondComma = input.indexOf(',', firstComma + 1);
+    int c1 = input.indexOf(',');
+    int c2 = input.indexOf(',', c1 + 1);
+    int c3 = input.indexOf(',', c2 + 1);
+    int c4 = input.indexOf(',', c3 + 1);
 
-    if (firstComma > 0 && secondComma > firstComma) {
-      String command = input.substring(0, firstComma);
-      String durationStr = input.substring(firstComma + 1, secondComma);
-      String speedStr = input.substring(secondComma + 1);
+    if (c1 > 0 && c2 > c1 && c3 > c2) {
+      String cmd = input.substring(0, c1);
+      int dur = input.substring(c1 + 1, c2).toInt();
+      int spd = input.substring(c2 + 1, c3).toInt();
 
-      int duration = durationStr.toInt();
-      int speed = speedStr.toInt();
+      int fadeIn = 0;
+      int fadeOut = 0;
 
-      if (duration >= 100 && duration <= 1000 && speed >= 0 && speed <= 255) {
-        if (command == "e1") actuator1.extend(duration, speed);
-        else if (command == "r1") actuator1.retract(duration, speed);
-        else if (command == "e2") actuator2.extend(duration, speed);
-        else if (command == "r2") actuator2.retract(duration, speed);
-        else Serial.println("Invalid command");
+      if (c4 > c3) {
+        fadeIn = input.substring(c3 + 1, c4).toInt();
+        fadeOut = input.substring(c4 + 1).toInt();
       } else {
-        Serial.println("Invalid duration or speed");
+        fadeIn = input.substring(c3 + 1).toInt();
       }
+
+      if (dur < 100 || dur > 2000 || spd < 0 || spd > 255) {
+        Serial.println("Invalid duration or speed");
+        return;
+      }
+
+      if (fadeIn + fadeOut > dur) {
+        fadeIn = dur / 2;
+        fadeOut = dur - fadeIn;
+        Serial.println("Fade-in + fade-out exceeded duration. Adjusted proportionally.");
+      }
+
+      if (cmd == "e1") actuator1.extend(dur, spd, fadeIn, fadeOut);
+      else if (cmd == "r1") actuator1.retract(dur, spd, fadeIn, fadeOut);
+      else if (cmd == "e2") actuator2.extend(dur, spd, fadeIn, fadeOut);
+      else if (cmd == "r2") actuator2.retract(dur, spd, fadeIn, fadeOut);
+      else Serial.println("Invalid command");
     } else {
-      Serial.println("Invalid input format (expected: cmd,duration,speed)");
+      Serial.println("Invalid format. Use: cmd,duration,speed[,fadeIn[,fadeOut]]");
     }
   }
 
