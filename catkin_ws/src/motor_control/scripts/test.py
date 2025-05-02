@@ -152,15 +152,15 @@ def execute_behavior_by_id(behavior_id, duration, speed, fade_in, fade_out):
     elif behavior_id == "10":
         four_count_leg_sequence(speed, duration, fade_in, fade_out)
     elif behavior_id == "11":
-        wave_456321()
+        wave_456321(speed, duration, fade_in, fade_out)
     elif behavior_id == "12":
-        wave_123654()
+        wave_123654(speed, duration, fade_in, fade_out)
     elif behavior_id == "13":
-        open_close_1_and_4_twice()
+        open_close_1_and_4_twice(speed, duration, fade_in, fade_out)
     elif behavior_id == "14":
-        four_count_with_wave()
+        four_count_with_wave(speed, duration, fade_in, fade_out)
     elif behavior_id == "15":
-        complexEightCount(current_duration, current_speed, current_fade_in, current_fade_out)
+        complexEightCount(speed, duration, fade_in, fade_out)
     else:
         print("Invalid behavior ID")
 
@@ -195,7 +195,7 @@ def four_count_leg_sequence(speed, duration, fade_in, fade_out, cycles=1):
         send_command(serial61, 'r2', duration, speed, fade_in, fade_out)
         time.sleep(duration / 1000.0)
 
-def wave_456321():
+def wave_456321(duration, speed, fade_in, fade_out):
     sequence = [
         (serial45, 'e1'),  # 4
         (serial45, 'e2'),  # 5
@@ -205,16 +205,16 @@ def wave_456321():
         (serial23, 'e2'),  # 1
     ]
     for serial_x, cmd in sequence:
-        send_command(serial_x, cmd, current_params['duration'], current_params['speed'], current_params['fade_in'], current_params['fade_out'])
+        send_command(serial_x, cmd, duration, speed, fade_in, fade_out)
         time.sleep(0.15)  # Delay between steps
 
     # Optional: retract in same order or reversed
     for serial_x, cmd in sequence:
         r_cmd = cmd.replace('e', 'r')
-        send_command(serial_x, r_cmd, current_params['duration'], current_params['speed'], current_params['fade_in'], current_params['fade_out'])
+        send_command(serial_x, r_cmd, duration, speed, fade_in, fade_out)
         time.sleep(0.15)
 
-def wave_123654():
+def wave_123654(duration, speed, fade_in, fade_out):
     sequence = [
         (serial23, 'e2'),  # 1
         (serial23, 'e1'),  # 2
@@ -224,16 +224,16 @@ def wave_123654():
         (serial45, 'e1'),  # 4
     ]
     for serial_x, cmd in sequence:
-        send_command(serial_x, cmd, current_params['duration'], current_params['speed'], current_params['fade_in'], current_params['fade_out'])
+        send_command(serial_x, cmd, duration, speed, fade_in, fade_out)
         time.sleep(0.15)  # Delay between steps
 
     # Optional: retract in same order
     for serial_x, cmd in sequence:
         r_cmd = cmd.replace('e', 'r')
-        send_command(serial_x, r_cmd, current_params['duration'], current_params['speed'], current_params['fade_in'], current_params['fade_out'])
+        send_command(serial_x, r_cmd, duration, speed, fade_in, fade_out)
         time.sleep(0.15)
 
-def open_close_1_and_4_twice():
+def open_close_1_and_4_twice(duration, speed, fade_in, fade_out):
     sequence = [
         # First open
         (serial23, 'e2'),  # 1
@@ -259,7 +259,7 @@ def open_close_1_and_4_twice():
         )
         time.sleep(current_params['duration'] / 1000.0)
 
-def four_count_with_wave():
+def four_count_with_wave(duration, speed, fade_in, fade_out):
     pair_sequence = [
         [(serial23, 'e2'), (serial61, 'e1')],  # 1 & 6
         [(serial23, 'e1'), (serial45, 'e1')],  # 3 & 4
@@ -301,24 +301,24 @@ def complexEightCount(duration, speed, fade_in, fade_out):
     step_delay = duration / 1000.0
 
     # Count 1: Leg 4
-    send_behavior('e2', serial45, duration, speed, fade_in, fade_out)
+    send_command(serial45, 'e2', duration, speed, fade_in, fade_out)
     time.sleep(step_delay)
 
     # Count 2: Leg 3
-    send_behavior('e1', serial23, duration, speed, fade_in, fade_out)
+    send_command(serial23, 'e1', duration, speed, fade_in, fade_out)
     time.sleep(step_delay)
 
     # Count 3: Leg 4
-    send_behavior('e2', serial45, duration, speed, fade_in, fade_out)
+    send_command(serial45, 'e2', duration, speed, fade_in, fade_out)
     time.sleep(step_delay)
 
     # Count 4: Leg 3
-    send_behavior('e1', serial23, duration, speed, fade_in, fade_out)
+    send_command(serial23, 'e1', duration, speed, fade_in, fade_out)
     time.sleep(step_delay)
 
     # Count 5: Legs 2 & 5 together
-    send_behavior('e2', serial23, duration, speed, fade_in, fade_out)
-    send_behavior('e1', serial61, duration, speed, fade_in, fade_out)
+    send_command(serial23, 'e2', duration, speed, fade_in, fade_out)
+    send_command(serial61, 'e1', duration, speed, fade_in, fade_out)
     time.sleep(step_delay)
 
     # Counts 6–8: Wave 4→5→6→3→2→1
@@ -331,7 +331,7 @@ def complexEightCount(duration, speed, fade_in, fade_out):
         (serial45, 'e1')   # 1
     ]
     for serial_x, cmd in wave_sequence:
-        send_behavior(cmd, serial_x, duration, speed, fade_in, fade_out)
+        send_command(serial_x, cmd, duration, speed, fade_in, fade_out)
         time.sleep(step_delay / 2)  # tighter wave flow
 
 
@@ -369,7 +369,7 @@ try:
         if user_input.lower() == "q":
             break
 
-        parts = user_input.split(',')
+        parts = user_input.split(' ')
         if len(parts) == 1:
             behavior_id = parts[0]
             execute_behavior_by_id(behavior_id, current_duration, current_speed, current_fade_in, current_fade_out)
@@ -381,10 +381,10 @@ try:
             current_fade_in = int(parts[3])
             current_fade_out = int(parts[4])
             # Update global parameters
-            current_params["duration"] = duration
-            current_params["speed"] = speed
-            current_params["fade_in"] = fade_in
-            current_params["fade_out"] = fade_out
+            current_params["duration"] = current_duration
+            current_params["speed"] = current_speed
+            current_params["fade_in"] = current_fade_in
+            current_params["fade_out"] = current_fade_out
             execute_behavior_by_id(behavior_id, current_duration, current_speed, current_fade_in, current_fade_out)
 
         else:
