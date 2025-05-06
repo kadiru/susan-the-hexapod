@@ -2,6 +2,7 @@ import serial
 import time
 import math
 import keyboard
+import curses
 
 # Serial connections to each Arduino
 serial45 = serial.Serial('/dev/serial/by-id/usb-Arduino__www.arduino.cc__0042_24333313930351C05231-if00', 115200, timeout=1)
@@ -269,7 +270,69 @@ def play_behavior(index):
         print(f"\nPlaying behavior {index + 1}/{len(behaviors)}")
         behaviors[index]()
 
+import curses
+import time
+
+def behavior_playback_control(stdscr):
+    # List of behaviors to cycle through
+    behaviors = [
+        "Sequential Wave",
+        "Sequential Wave Front to Back Symmetrical Sides",
+        "Point Left Sequential",
+        "Point Right Sequential",
+        "Retract Left Sequential",
+        "Retract Right Sequential"
+    ]
+
+    # Initialize the current behavior index and state
+    behavior_index = 0
+    playing = True
+
+    # Setup for the terminal
+    stdscr.clear()
+    curses.curs_set(0)  # Hide cursor
+    stdscr.nodelay(1)   # Non-blocking input mode
+
+    while True:
+        # Display the current behavior
+        stdscr.clear()
+        stdscr.addstr(0, 0, f"Current Behavior: {behaviors[behavior_index]}")
+        stdscr.addstr(1, 0, "Press right arrow to play next behavior")
+        stdscr.addstr(2, 0, "Press left arrow to play previous behavior")
+        stdscr.addstr(3, 0, "Press 'space' to pause/resume current behavior")
+        stdscr.addstr(4, 0, "Press 'q' to quit playback")
+        
+        if not playing:
+            stdscr.addstr(5, 0, "Playback is paused... Press 'space' to resume.")
+        else:
+            stdscr.addstr(5, 0, "Playback is running... Press 'space' to pause.")
+
+        # Refresh the screen to update the text
+        stdscr.refresh()
+
+        # Wait for a key press (non-blocking)
+        key = stdscr.getch()
+
+        if key == curses.KEY_RIGHT:  # Right arrow key
+            behavior_index = (behavior_index + 1) % len(behaviors)
+        elif key == curses.KEY_LEFT:  # Left arrow key
+            behavior_index = (behavior_index - 1) % len(behaviors)
+        elif key == ord(' '):  # Space key to pause/resume
+            playing = not playing
+            status = "paused" if not playing else "playing"
+            stdscr.addstr(0, 0, f"Behavior is {status}. Press 'space' to toggle.")
+            stdscr.refresh()
+            continue
+        elif key == ord('q'):  # 'q' to quit
+            break
+
+        # Optional: Add a small delay to avoid overloading the CPU with constant screen refresh
+        time.sleep(0.1)
+
+
+'''
 def behavior_playback_control():
+      
     # List of behaviors to cycle through
     behaviors = [
         pointLeftSequential,
@@ -309,6 +372,7 @@ def behavior_playback_control():
             print("Exiting behavior playback")
             break
         time.sleep(0.1)  # Add a short delay to prevent high CPU usage
+            '''
 
 # Function for manual control
 def manual_control():
@@ -378,7 +442,9 @@ def main():
         if user_choice == '1':
             manual_control()
         elif user_choice == '2':
-            behavior_playback_control()
+            #behavior_playback_control()
+            # Start behavior playback control with curses
+            curses.wrapper(behavior_playback_control)
         else:
             print("Invalid choice. Exiting.")
             return
@@ -391,6 +457,7 @@ def main():
         serial61.close()
         serial23.close()
         print("Serial ports closed.")
+
 
 if __name__ == "__main__":
     main()
