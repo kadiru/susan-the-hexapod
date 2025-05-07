@@ -282,11 +282,6 @@ def execute_behavior_by_id(behavior_id, duration, speed, fade_in, fade_out):
     else:
         print("Invalid behavior ID")
 
-def play_behavior(index):
-    if 0 <= index < len(behaviors):
-        print(f"\nPlaying behavior {index + 1}/{len(behaviors)}")
-        behaviors[index]()
-
 # === Behavior list: tuples of (name, function) ===
 behavior_defs = [
     ("retractAll", lambda: retractAll(1200, 100, 100, 100)),
