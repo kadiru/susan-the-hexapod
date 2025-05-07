@@ -243,6 +243,80 @@ def shake(duration, speed, fade_in, fade_out, numOfShimmies, stop_event):
             send_command(serial_x, cmd, duration, speed, fade_in, fade_out)
         sleep_interruptibly(duration / 1000.0, stop_event)
 
+def four_count_leg_sequence(duration, speed, fade_in, fade_out, cycles, stop_event):
+    """Moves the legs in a 4-count rhythm: 3 → 4 → (2+5) → (1+6)"""
+    for _ in range(cycles):
+        # 1st count: Leg 3
+        send_command(serial23, 'e2', duration, speed, fade_in, fade_out)
+        sleep_interruptibly(duration / 1000.0, stop_event)
+        send_command(serial23, 'r2', duration, speed, fade_in, fade_out)
+        sleep_interruptibly(duration / 1000.0, stop_event)
+
+        # 2nd count: Leg 4
+        send_command(serial45, 'e1', duration, speed, fade_in, fade_out)
+        sleep_interruptibly(duration / 1000.0, stop_event)
+        send_command(serial45, 'r1', duration, speed, fade_in, fade_out)
+        sleep_interruptibly(duration / 1000.0, stop_event)
+
+        # 3rd count: Legs 2 & 5
+        send_command(serial23, 'e1', duration, speed, fade_in, fade_out)
+        send_command(serial45, 'e2', duration, speed, fade_in, fade_out)
+        sleep_interruptibly(duration / 1000.0, stop_event)
+        send_command(serial23, 'r1', duration, speed, fade_in, fade_out)
+        send_command(serial45, 'r2', duration, speed, fade_in, fade_out)
+        sleep_interruptibly(duration / 1000.0, stop_event)
+
+        # 4th count: Legs 1 & 6
+        send_command(serial61, 'e1', duration, speed, fade_in, fade_out)
+        send_command(serial61, 'e2', duration, speed, fade_in, fade_out)
+        sleep_interruptibly(duration / 1000.0, stop_event)
+        send_command(serial61, 'r1', duration, speed, fade_in, fade_out)
+        send_command(serial61, 'r2', duration, speed, fade_in, fade_out)
+        sleep_interruptibly(duration / 1000.0, stop_event)
+
+def circling_move(duration, speed, fade_in, fade_out, cycles, delay_inter_cycle, stop_event):
+    """Moves the legs in a 4-count rhythm: 3 → 4 → (2+5) → (1+6)"""
+    for _ in range(cycles):
+        
+        # Leg 1
+        send_command(serial61, 'e2', duration, speed, fade_in, fade_out)
+        sleep_interruptibly(duration / 1000.0, stop_event)
+        send_command(serial61, 'r2', duration, speed, fade_in, fade_out)
+        sleep_interruptibly(duration / 1000.0, stop_event)
+
+        # Leg 2
+        send_command(serial23, 'e1', duration, speed, fade_in, fade_out)
+        sleep_interruptibly(duration / 1000.0, stop_event)
+        send_command(serial23, 'r1', duration, speed, fade_in, fade_out)
+        sleep_interruptibly(duration / 1000.0, stop_event)
+
+        # Leg 3
+        send_command(serial23, 'e2', duration, speed, fade_in, fade_out)
+        sleep_interruptibly(duration / 1000.0, stop_event)
+        send_command(serial23, 'r2', duration, speed, fade_in, fade_out)
+        sleep_interruptibly(duration / 1000.0, stop_event)
+
+        # Leg 4
+        send_command(serial45, 'e1', duration, speed, fade_in, fade_out)
+        sleep_interruptibly(duration / 1000.0, stop_event)
+        send_command(serial45, 'r1', duration, speed, fade_in, fade_out)
+        sleep_interruptibly(duration / 1000.0, stop_event)
+
+        # Leg 5
+        send_command(serial45, 'e2', duration, speed, fade_in, fade_out)
+        sleep_interruptibly(duration / 1000.0, stop_event)
+        send_command(serial45, 'r2', duration, speed, fade_in, fade_out)
+        sleep_interruptibly(duration / 1000.0, stop_event)
+
+        # Leg 6
+        send_command(serial61, 'e1', duration, speed, fade_in, fade_out)
+        sleep_interruptibly(duration / 1000.0, stop_event)
+        send_command(serial61, 'r1', duration, speed, fade_in, fade_out)
+        sleep_interruptibly(duration / 1000.0, stop_event)
+        
+        sleep_interruptibly(delay_inter_cycle / 1000.0, stop_event)
+        
+
 # Optionally, export a list or dict of behaviors for auto-registration
 ALL_BEHAVIORS = {
     "waveFrontToBackSync": partial(waveFrontToBackSync, cycles= 20, each_leg_duration=750, speed=100, fade_in=100, fade_out=100),
@@ -252,7 +326,9 @@ ALL_BEHAVIORS = {
     "prepForLeftRightLeft": partial(moveAll, extend_or_retract="retract", duration=1000, speed=80, fade_in=40, fade_out=40),
     "extendLeftRightLeft": partial(extendLeftRightLeft, duration=500, speed=255, fade_in=100, fade_out=100),
     "shake": partial(shake, duration=125, speed=255, fade_in=50, fade_out=50, numOfShimmies=12),
-    "extendAll_2000_60": partial(moveAll, extend_or_retract="extend", duration=2000, speed=80, fade_in=30, fade_out=30),
+    "extendAll_2000_60": partial(moveAll, extend_or_retract="extend", duration=2800, speed=80, fade_in=30, fade_out=30),
+    "four_count_leg_sequence": partial(four_count_leg_sequence, duration=800, speed=255, fade_in=50, fade_out=50, cycles=1),
+    "circling_move": partial(circling_move, duration=100, speed=255, fade_in=0, fade_out=0, cycles=10, delay_inter_cycle=200),      
     "buzz": partial(shake, duration=100, speed=255, fade_in=50, fade_out=50, numOfShimmies=5),
     "retractAll": partial(moveAll, extend_or_retract="retract", duration=1800, speed=140, fade_in=100, fade_out=100)    
 }
