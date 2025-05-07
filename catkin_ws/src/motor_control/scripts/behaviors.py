@@ -14,6 +14,14 @@ serial23 = serial.Serial('/dev/serial/by-id/usb-Arduino__www.arduino.cc__0043_85
 
 time.sleep(2)  # Give Arduinos time to reset
 
+def sleep_interruptibly(total_duration, stop_event, interval=0.02):
+    elapsed = 0
+    while elapsed < total_duration:
+        if stop_event.is_set():
+            break
+        time.sleep(interval)
+        elapsed += interval
+
 def send_command(serial_x, command, duration, speed, fade_in=50, fade_out=50):
     full_command = f"{command},{duration},{speed},{fade_in},{fade_out}"
     print(f"Sending: {full_command}")
@@ -134,10 +142,70 @@ def extendLeftRightLeft(duration, speed, fade_in, fade_out, stop_event):
     print("\nFinal full retract of all legs...")
     retractAll(duration=1000, speed=255, fade_in=fade_in, fade_out=fade_out, stop_event=stop_event)
 
+def waveFrontToBackSync(cycles, each_leg_duration, speed, fade_in, fade_out, stop_event):
+    extend_pairs = [
+        [(serial61, 'e1'), (serial61, 'e2')],  # 6 + 1 (front)
+        [(serial45, 'e2'), (serial23, 'e1')],  # 5 + 2 (middle)
+        [(serial45, 'e1'), (serial23, 'e2')],  # 4 + 3 (rear)
+    ]
+
+    retract_pairs = [
+        [(serial61, 'r1'), (serial61, 'r2')],
+        [(serial45, 'r2'), (serial23, 'r1')],
+        [(serial45, 'r1'), (serial23, 'r2')],
+    ]
+
+    total_pairs = len(extend_pairs)
+
+    for cycle in range(cycles):
+        if stop_event.is_set():
+            print("Wave behavior interrupted before cycle.")
+            return
+
+        print(f"\nCycle {cycle + 1} of {cycles} — Extending Wave")
+
+        if cycle < 3:
+            extend_duration = each_leg_duration // 2
+            retract_duration = each_leg_duration
+            extend_speed = min(255, int(speed * 2.5))
+        else:
+            extend_duration = each_leg_duration
+            retract_duration = each_leg_duration
+            extend_speed = speed
+
+        delay_between_pairs_ext = extend_duration / total_pairs / 1000.0
+        delay_between_pairs_ret = retract_duration / total_pairs / 1000.0
+
+        # Extension phase
+        for i in range(total_pairs):
+            if stop_event.is_set():
+                print("Wave behavior interrupted during extension.")
+                return
+            for serial_x, cmd in extend_pairs[i]:
+                send_command(serial_x, cmd, extend_duration, extend_speed, fade_in, fade_out)
+            sleep_interruptibly(delay_between_pairs_ext, stop_event)
+
+        print(f"Cycle {cycle + 1} of {cycles} — Retracting Wave")
+
+        # Retraction phase
+        for i in range(total_pairs):
+            if stop_event.is_set():
+                print("Wave behavior interrupted during retraction.")
+                return
+            for serial_x, cmd in retract_pairs[i]:
+                send_command(serial_x, cmd, retract_duration, speed, fade_in, fade_out)
+            sleep_interruptibly(delay_between_pairs_ret, stop_event)
+
+    print("\nFinal full retract of all legs...")
+    retractAll(duration=1500, speed=100, fade_in=fade_in, fade_out=fade_out, stop_event=stop_event)
+
 # Optionally, export a list or dict of behaviors for auto-registration
 ALL_BEHAVIORS = {
+    "waveFrontToBackSync": partial(waveFrontToBackSync, cycles= 20, each_leg_duration=750, speed=100, fade_in=100, fade_out=100),
+    "extendRightSync": partial(extendRightSync, duration=1500, speed=125, fade_in=0, fade_out=0),
+    "extendLeftSync": partial(extendLeftSync, duration=1500, speed=125, fade_in=0, fade_out=0),
     "retractAll": partial(retractAll, duration=1500, speed=100, fade_in=0, fade_out=0),
-    "extendLeftSync": partial(extendLeftSync, duration=1500, speed=100, fade_in=0, fade_out=0),
-    "extendRightSync": partial(extendRightSync, duration=1500, speed=100, fade_in=0, fade_out=0),
     "extendLeftRightLeft": partial(extendLeftRightLeft, duration=800, speed=255, fade_in=100, fade_out=100)
 }
+
+__all__ = ['ALL_BEHAVIORS', 'retractAll']

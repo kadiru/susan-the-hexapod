@@ -1,6 +1,7 @@
 import curses
+from threading import Event
 from behavior_manager import BehaviorManager  # assuming you save the class in a module
-from behaviors import ALL_BEHAVIORS
+from behaviors import ALL_BEHAVIORS, retractAll
 
 def interactive_menu(stdscr, manager: BehaviorManager):
     curses.curs_set(0)
@@ -13,7 +14,7 @@ def interactive_menu(stdscr, manager: BehaviorManager):
     while True:
         stdscr.clear()
         stdscr.addstr(0, 0, "🦿 Six-Legged Robot Behavior Menu", curses.A_BOLD)
-        stdscr.addstr(1, 0, "↑↓ to navigate | Enter to start | 's' to stop | 'q' to quit", curses.A_DIM)
+        stdscr.addstr(1, 0, "↑↓ to navigate | Enter to start | 's' to stop | 'r' retract | 'q' quit", curses.A_DIM)
 
         # Highlight selection
         for i, name in enumerate(behaviors):
@@ -42,6 +43,10 @@ def interactive_menu(stdscr, manager: BehaviorManager):
             manager.start(selected)
         elif key == ord('s'):
             manager.stop()
+        elif key == ord('r'):
+            manager.stop()
+            dummy_event = Event()
+            retractAll(duration=1000, speed=255, fade_in=0, fade_out=0, stop_event=dummy_event)
         elif key == ord('q'):
             manager.stop()
             break
