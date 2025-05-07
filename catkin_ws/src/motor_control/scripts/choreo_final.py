@@ -3,6 +3,7 @@ import time
 import math
 import keyboard
 import curses
+import threading
 
 # Serial connections to each Arduino
 serial45 = serial.Serial('/dev/serial/by-id/usb-Arduino__www.arduino.cc__0042_24333313930351C05231-if00', 115200, timeout=1)
@@ -293,7 +294,32 @@ behavior_defs = [
     ("shake", lambda: shake(400, 255, 100, 100, 5))
 ]
 
+# === Threading logic ===
+current_thread = None
+stop_event = threading.Event()
+
+def run_behavior_thread(behavior_func):
+    global stop_event
+    stop_event.clear()
+
+    def thread_func():
+        behavior_func()
+
+    thread = threading.Thread(target=thread_func)
+    thread.start()
+    return thread
+
+def stop_current_behavior():
+    global current_thread, stop_event
+    if current_thread and current_thread.is_alive():
+        stop_event.set()
+        current_thread.join()
+        current_thread = None
+
+# === Curses-based control with threading ===
 def behavior_playback_control(stdscr):
+    global current_thread, stop_event
+
     behavior_index = 0
     playing = True
     behavior_executed = False
@@ -304,11 +330,9 @@ def behavior_playback_control(stdscr):
     while True:
         stdscr.clear()
 
-        # Determine indices for previous, current, and next behaviors
         prev_index = (behavior_index - 1) % len(behavior_defs)
         next_index = (behavior_index + 1) % len(behavior_defs)
 
-        # Show behavior names
         stdscr.addstr(0, 0, f"Previous Behavior: {behavior_defs[prev_index][0]}")
         stdscr.addstr(1, 0, f"Current Behavior:  {behavior_defs[behavior_index][0]}")
         stdscr.addstr(2, 0, f"Next Behavior:     {behavior_defs[next_index][0]}")
@@ -322,9 +346,10 @@ def behavior_playback_control(stdscr):
 
         stdscr.refresh()
 
-        # Execute current behavior once if playing and not yet run
+        # Run the behavior in a new thread if not yet executed
         if playing and not behavior_executed:
-            behavior_defs[behavior_index][1]()  # Call the behavior function
+            stop_current_behavior()
+            current_thread = run_behavior_thread(behavior_defs[behavior_index][1])
             behavior_executed = True
 
         key = stdscr.getch()
@@ -337,54 +362,13 @@ def behavior_playback_control(stdscr):
             behavior_executed = False
         elif key == ord(' '):
             playing = not playing
+            if not playing:
+                stop_current_behavior()
         elif key == ord('q'):
+            stop_current_behavior()
             break
 
         time.sleep(0.1)
-
-'''
-def behavior_playback_control():
-      
-    # List of behaviors to cycle through
-    behaviors = [
-        extendLeftSeq,
-        extendRightSeq,
-        # Add more behavior functions here
-    ]
-    
-    current_behavior_index = 0]kl
-
-    print("\nBehavior Playback Control:")
-    print(" - Press right arrow to play next behavior")
-    print(" - Press left arrow to play previous behavior")
-    print(" - Press 'space' to pause/resume current behavior")
-    print(" - Press 'q' to quit playback")
-
-    while True:
-        # Listen for key presses
-        if keyboard.is_pressed('right'):
-            # Play next behavior
-            print(f"Playing behavior: {behaviors[current_behavior_index].__name__}")
-            behaviors[current_behavior_index](500, 127, 50, 50)  # Adjust parameters as needed
-            current_behavior_index = (current_behavior_index + 1) % len(behaviors)
-            time.sleep(0.5)
-        
-        elif keyboard.is_pressed('left'):
-            # Play previous behavior
-            current_behavior_index = (current_behavior_index - 1) % len(behaviors)
-            print(f"Playing behavior: {behaviors[current_behavior_index].__name__}")
-            behaviors[current_behavior_index](500, 127, 50, 50)  # Adjust parameters as needed
-            time.sleep(0.5)
-
-        elif keyboard.is_pressed('space'):
-            # Pause/resume current behavior
-            print("Toggling pause/resume")
-            # Add pause logic here if needed
-        elif keyboard.is_pressed('q'):
-            print("Exiting behavior playback")
-            break
-        time.sleep(0.1)  # Add a short delay to prevent high CPU usage
-            '''
 
 # Function for manual control
 def manual_control():
