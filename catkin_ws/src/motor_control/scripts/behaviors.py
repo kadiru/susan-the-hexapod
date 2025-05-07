@@ -65,6 +65,39 @@ def retractAll(duration, speed, fade_in, fade_out, stop_event):
         time.sleep(check_interval)
         waited += check_interval
 
+def moveAll(extend_or_retract, duration, speed, fade_in, fade_out, stop_event):
+    if extend_or_retract == "retract":
+        commands = [
+            (serial45, 'r1'),  # Leg 4
+            (serial45, 'r2'),  # Leg 5
+            (serial61, 'r1'),  # Leg 6
+            (serial23, 'r2'),  # Leg 3
+            (serial23, 'r1'),  # Leg 2
+            (serial61, 'r2'),  # Leg 1
+        ]
+        print("Retracting all legs...")
+    elif extend_or_retract == "extend":
+        commands = [
+            (serial61, 'e2'),  # Leg 1
+            (serial23, 'e1'),  # Leg 2
+            (serial23, 'e2'),  # Leg 3
+            (serial45, 'e1'),  # Leg 4
+            (serial45, 'e2'),  # Leg 5
+            (serial61, 'e1'),  # Leg 6
+        ]
+        print("Extending all legs...")
+    else:
+        print(f"Invalid request: {extend_or_retract}")
+        return
+
+    for serial_x, cmd in commands:
+        if stop_event.is_set():
+            print(f"{extend_or_retract.capitalize()} operation interrupted.")
+            break
+        send_command(serial_x, cmd, duration, speed, fade_in, fade_out)
+
+    sleep_interruptibly(duration / 1000.0, stop_event)
+
 def extendLeftSync(duration, speed, fade_in, fade_out, stop_event):
     commands = [
         (serial61, 'e2'),  # Leg 1 extend
@@ -199,13 +232,29 @@ def waveFrontToBackSync(cycles, each_leg_duration, speed, fade_in, fade_out, sto
     print("\nFinal full retract of all legs...")
     retractAll(duration=1500, speed=100, fade_in=fade_in, fade_out=fade_out, stop_event=stop_event)
 
+def shake(duration, speed, fade_in, fade_out, numOfShimmies, stop_event):
+    print("shaking")
+
+    for i in range(numOfShimmies):
+        for serial_x, cmd in [(serial45, 'e1'), (serial45, 'e2'), (serial61, 'e1'), (serial61, 'e2'), (serial23, 'e1'), (serial23, 'e2')]:
+            send_command(serial_x, cmd, duration, speed, fade_in, fade_out)
+        sleep_interruptibly(duration / 1000.0, stop_event)
+        for serial_x, cmd in [(serial45, 'r1'), (serial45, 'r2'), (serial61, 'r1'), (serial61, 'r2'), (serial23, 'r1'), (serial23, 'r2')]:
+            send_command(serial_x, cmd, duration, speed, fade_in, fade_out)
+        sleep_interruptibly(duration / 1000.0, stop_event)
+
 # Optionally, export a list or dict of behaviors for auto-registration
 ALL_BEHAVIORS = {
     "waveFrontToBackSync": partial(waveFrontToBackSync, cycles= 20, each_leg_duration=750, speed=100, fade_in=100, fade_out=100),
     "extendRightSync": partial(extendRightSync, duration=1500, speed=125, fade_in=0, fade_out=0),
     "extendLeftSync": partial(extendLeftSync, duration=1500, speed=125, fade_in=0, fade_out=0),
-    "retractAll": partial(retractAll, duration=1500, speed=100, fade_in=0, fade_out=0),
-    "extendLeftRightLeft": partial(extendLeftRightLeft, duration=800, speed=255, fade_in=100, fade_out=100)
+    "extendAll": partial(moveAll, extend_or_retract="extend", duration=1800, speed=140, fade_in=100, fade_out=100),
+    "prepForLeftRightLeft": partial(moveAll, extend_or_retract="retract", duration=1000, speed=80, fade_in=40, fade_out=40),
+    "extendLeftRightLeft": partial(extendLeftRightLeft, duration=500, speed=255, fade_in=100, fade_out=100),
+    "shake": partial(shake, duration=125, speed=255, fade_in=50, fade_out=50, numOfShimmies=12),
+    "extendAll_2000_60": partial(moveAll, extend_or_retract="extend", duration=2000, speed=80, fade_in=30, fade_out=30),
+    "buzz": partial(shake, duration=100, speed=255, fade_in=50, fade_out=50, numOfShimmies=5),
+    "retractAll": partial(moveAll, extend_or_retract="retract", duration=1800, speed=140, fade_in=100, fade_out=100)    
 }
 
 __all__ = ['ALL_BEHAVIORS', 'retractAll']
