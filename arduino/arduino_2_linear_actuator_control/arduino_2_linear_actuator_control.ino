@@ -151,7 +151,7 @@ void loop() {
         fadeIn = input.substring(c3 + 1).toInt();
       }
 
-      if (dur < 100 || dur > 2000 || spd < 0 || spd > 255) {
+      if (dur < 10 || dur > 9999 || spd < 0 || spd > 255) {
         Serial.println("Invalid duration or speed");
         return;
       }
