@@ -16,7 +16,7 @@ def send_command(serial_x, command, duration, speed, fade_in=50, fade_out=50):
     print(f"Sending: {full_command}")
     serial_x.write((full_command + '\n').encode('utf-8'))
 
-def retractAllCompletely(duration, speed, fade_in, fade_out):
+def retractAll(duration, speed, fade_in, fade_out):
     retract_commands = [
         (serial45, 'r1'),  # Leg 4
         (serial45, 'r2'),  # Leg 5
@@ -30,7 +30,7 @@ def retractAllCompletely(duration, speed, fade_in, fade_out):
     for serial_x, cmd in retract_commands:
         send_command(serial_x, cmd, duration, speed, fade_in, fade_out)
 
-def pointLeftSequential(duration, speed, fade_in, fade_out):
+def extendLeftSeq(duration, speed, fade_in, fade_out):
     pair_sequence = [
         ((serial61, 'e2'), (serial61, 'r1')),  # Left front extend, right rear retract
         ((serial23, 'e1'), (serial45, 'r1')),  # Left middle extend, right front retract
@@ -44,7 +44,7 @@ def pointLeftSequential(duration, speed, fade_in, fade_out):
         send_command(serial_right, cmd_right, duration, speed, fade_in, fade_out)
         time.sleep(delay_between_pairs)
 
-def pointRightSequential(duration, speed, fade_in, fade_out):
+def extendRightSeq(duration, speed, fade_in, fade_out):
     pair_sequence = [
         ((serial61, 'e1'), (serial61, 'r2')),  # Right front extend, left rear retract
         ((serial45, 'e2'), (serial23, 'r1')),  # Right middle extend, left front retract
@@ -58,7 +58,7 @@ def pointRightSequential(duration, speed, fade_in, fade_out):
         send_command(serial_left, cmd_left, duration, speed, fade_in, fade_out)
         time.sleep(delay_between_pairs)
 
-def pointLeft(duration, speed, fade_in, fade_out):
+def extendLeftSync(duration, speed, fade_in, fade_out):
     send_command(serial61, 'e2', duration, speed, fade_in, fade_out)
     send_command(serial23, 'e1', duration, speed, fade_in, fade_out)
     send_command(serial23, 'e2', duration, speed, fade_in, fade_out)
@@ -67,7 +67,7 @@ def pointLeft(duration, speed, fade_in, fade_out):
     send_command(serial61, 'r1', duration, speed, fade_in, fade_out)
     time.sleep(duration/1000.0)
 
-def pointRight(duration, speed, fade_in, fade_out):
+def extendRightSync(duration, speed, fade_in, fade_out):
     send_command(serial45, 'e1', duration, speed, fade_in, fade_out)
     send_command(serial45, 'e2', duration, speed, fade_in, fade_out)
     send_command(serial61, 'e1', duration, speed, fade_in, fade_out)
@@ -76,7 +76,7 @@ def pointRight(duration, speed, fade_in, fade_out):
     send_command(serial23, 'r2', duration, speed, fade_in, fade_out)
     time.sleep(duration/1000.0)
 
-def retractRightSequential(duration, speed, fade_in, fade_out):
+def retractRightSeq(duration, speed, fade_in, fade_out):
     right_retract_sequence = [
         (serial61, 'r1'),  # Right front
         (serial45, 'r2'),  # Right middle
@@ -89,7 +89,7 @@ def retractRightSequential(duration, speed, fade_in, fade_out):
         send_command(serial_x, cmd, duration, speed, fade_in, fade_out)
         time.sleep(delay_between_legs)
 
-def retractLeftSequential(duration, speed, fade_in, fade_out):
+def retractLeftSeq(duration, speed, fade_in, fade_out):
     left_retract_sequence = [
         (serial23, 'r2'),  # Left rear
         (serial23, 'r1'),  # Left middle
@@ -102,7 +102,7 @@ def retractLeftSequential(duration, speed, fade_in, fade_out):
         send_command(serial_x, cmd, duration, speed, fade_in, fade_out)
         time.sleep(delay_between_legs)
 
-def extendAllCompletely(duration, speed, fade_in, fade_out):
+def extendAll(duration, speed, fade_in, fade_out):
     extend_commands = [
         (serial61, 'e1'),  # Right rear
         (serial61, 'e2'),  # Left front
@@ -115,25 +115,25 @@ def extendAllCompletely(duration, speed, fade_in, fade_out):
     for serial_x, cmd in extend_commands:
         send_command(serial_x, cmd, duration, speed, fade_in, fade_out)
 
-def prepPointLeftRightLeft(duration, speed, fade_in, fade_out):
-    extendAllCompletely(duration, speed, fade_in, fade_out)
+def prepExtendLeftRightLeft(duration, speed, fade_in, fade_out):
+    extendAll(duration, speed, fade_in, fade_out)
 
-def pointLeftRightLeft(duration, speed, fade_in, fade_out):
-    print("Pointing Left...")
-    pointLeft(duration, speed, fade_in, fade_out)
-
-    #time.sleep(duration/1000.0)  # small pause between transitions
-
-    print("Pointing Right...")
-    pointRight(duration, speed, fade_in, fade_out)
+def extendLeftRightLeft(duration, speed, fade_in, fade_out):
+    print("extending Left...")
+    extendLeftSync(duration, speed, fade_in, fade_out)
 
     #time.sleep(duration/1000.0)  # small pause between transitions
 
-    print("Pointing Left again...")
-    pointLeft(duration, speed, fade_in, fade_out)
+    print("extending Right...")
+    extendRightSync(duration, speed, fade_in, fade_out)
+
+    #time.sleep(duration/1000.0)  # small pause between transitions
+
+    print("extending Left again...")
+    extendLeftSync(duration, speed, fade_in, fade_out)
     
     print("\nFinal full retract of all legs...")
-    retractAllCompletely(duration=1000, speed=255, fade_in=fade_in, fade_out=fade_out)
+    retractAll(duration=1000, speed=255, fade_in=fade_in, fade_out=fade_out)
 
 def seqWave(duration, speed, delay_between_legs, fade_in, fade_out):
     wave_sequence = [
@@ -227,11 +227,32 @@ def seqWaveFrontToBackSymmetricalSides_looped(cycles, base_duration, speed, fade
             time.sleep(delay_between_pairs_ret)
 
     print("\nFinal full retract of all legs...")
-    retractAllCompletely(duration=1000, speed=255, fade_in=fade_in, fade_out=fade_out)
+    retractAll(duration=1000, speed=255, fade_in=fade_in, fade_out=fade_out)
+
+def shake(duration, speed, fade_in, fade_out, numOfShimmies):
+    print("shaking")
+
+    for i in range(numOfShimmies):
+        print("asd")
+        for serial_x, cmd in [(serial45, 'e1'), (serial45, 'e2'), (serial61, 'e1'), (serial61, 'e2'), (serial23, 'e1'), (serial23, 'e2')]:
+            send_command(serial_x, cmd, duration, speed, fade_in, fade_out)
+        time.sleep(duration / 1000.0)
+        for serial_x, cmd in [(serial45, 'r1'), (serial45, 'r2'), (serial61, 'r1'), (serial61, 'r2'), (serial23, 'r1'), (serial23, 'r2')]:
+            send_command(serial_x, cmd, duration, speed, fade_in, fade_out)
+        time.sleep(duration / 1000.0)
+
+def restingBreath(duration, speed, fade_in, fade_out, cycles=10):
+    for i in range(cycles):
+        for serial_x, cmd in [(serial45, 'e1'), (serial45, 'e2'), (serial61, 'e1'), (serial61, 'e2'), (serial23, 'e1'), (serial23, 'e2')]:
+            send_command(serial_x, cmd, duration, speed, fade_in, fade_out)
+        time.sleep(duration / 1000.0)
+        for serial_x, cmd in [(serial45, 'r1'), (serial45, 'r2'), (serial61, 'r1'), (serial61, 'r2'), (serial23, 'r1'), (serial23, 'r2')]:
+            send_command(serial_x, cmd, duration, speed, fade_in, fade_out)
+        time.sleep(duration / 1000.0)
 
 def execute_behavior_by_id(behavior_id, duration, speed, fade_in, fade_out):
     if behavior_id == "0":
-        retractAllCompletely(1200, 255, 200, 200)   
+        retractAll(1200, 255, 200, 200)   
     if behavior_id == "1":
         seqWave(duration, speed, 150, fade_in, fade_out)
     elif behavior_id == "2":
@@ -239,104 +260,100 @@ def execute_behavior_by_id(behavior_id, duration, speed, fade_in, fade_out):
     elif behavior_id == "3":
         seqWaveFrontToBackSymmetricalSides_looped(20,duration,100,fade_in,fade_out)
     elif behavior_id == "4":
-        pointLeftSequential(duration, 255, fade_in, fade_out)
+        extendLeftSeq(duration, 255, fade_in, fade_out)
     elif behavior_id == "5":
-        pointRightSequential(duration, 255, fade_in, fade_out)
+        extendRightSeq(duration, 255, fade_in, fade_out)
     elif behavior_id == "6":
-        retractRightSequential(duration, 255, fade_in, fade_out)
+        retractRightSeq(duration, 255, fade_in, fade_out)
     elif behavior_id == "7":
-        retractLeftSequential(duration, 255, fade_in, fade_out)
+        retractLeftSeq(duration, 255, fade_in, fade_out)
     elif behavior_id == "8":
-        extendAllCompletely(1200, 255, 200, 200)
+        extendAll(1200, 255, 200, 200)
     elif behavior_id == "9":
-        prepPointLeftRightLeft(1500, 90, 40, 40)
+        prepExtendLeftRightLeft(1500, 90, 40, 40)
     elif behavior_id == "10":
-        pointLeftRightLeft(400, 255, 100, 100)
+        extendLeftRightLeft(150, 255, 100, 100)
+    elif behavior_id == "11":
+        shake(100, 255, fade_in, fade_out, 5) #buzz
+    elif behavior_id == "12":
+        shake(150, 255, 0, 0, 5) #shimmy        
+    elif behavior_id == "13":
+        restingBreath(600, 60, 50, 50) #resting
     else:
         print("Invalid behavior ID")
-
-# Behavior list
-behaviors = [
-    lambda: pointLeft(500, 127, 50, 50),
-    lambda: pointRight(500, 127, 50, 50),
-    lambda: pointLeft(500, 127, 50, 50)
-]
-
-current_index = 0
-paused = False
 
 def play_behavior(index):
     if 0 <= index < len(behaviors):
         print(f"\nPlaying behavior {index + 1}/{len(behaviors)}")
         behaviors[index]()
 
-import curses
-import time
+# === Behavior list: tuples of (name, function) ===
+behavior_defs = [
+    ("retractAll", lambda: retractAll(1200, 100, 100, 100)),
+    ("seqWaveFrontToBackSymmetricalSides_looped", lambda: seqWaveFrontToBackSymmetricalSides_looped(20,750,100,100,100)),
+    ("extendRightSync", lambda: extendRightSync(1500, 150, 200, 200)),
+    ("extendLeftSync", lambda: extendLeftSync(1500, 150, 200, 200)),
+    ("prepExtendLeftRightLeft", lambda: prepExtendLeftRightLeft(1500, 90, 40, 40)),
+    ("extendLeftRightLeft", lambda: extendLeftRightLeft(400, 255, 100, 100)),
+    ("shake", lambda: shake(400, 255, 100, 100, 5))
+]
 
 def behavior_playback_control(stdscr):
-    # List of behaviors to cycle through
-    behaviors = [
-        "Sequential Wave",
-        "Sequential Wave Front to Back Symmetrical Sides",
-        "Point Left Sequential",
-        "Point Right Sequential",
-        "Retract Left Sequential",
-        "Retract Right Sequential"
-    ]
-
-    # Initialize the current behavior index and state
     behavior_index = 0
     playing = True
+    behavior_executed = False
 
-    # Setup for the terminal
-    stdscr.clear()
-    curses.curs_set(0)  # Hide cursor
-    stdscr.nodelay(1)   # Non-blocking input mode
+    curses.curs_set(0)
+    stdscr.nodelay(1)
 
     while True:
-        # Display the current behavior
         stdscr.clear()
-        stdscr.addstr(0, 0, f"Current Behavior: {behaviors[behavior_index]}")
-        stdscr.addstr(1, 0, "Press right arrow to play next behavior")
-        stdscr.addstr(2, 0, "Press left arrow to play previous behavior")
-        stdscr.addstr(3, 0, "Press 'space' to pause/resume current behavior")
-        stdscr.addstr(4, 0, "Press 'q' to quit playback")
-        
-        if not playing:
-            stdscr.addstr(5, 0, "Playback is paused... Press 'space' to resume.")
-        else:
-            stdscr.addstr(5, 0, "Playback is running... Press 'space' to pause.")
 
-        # Refresh the screen to update the text
+        # Determine indices for previous, current, and next behaviors
+        prev_index = (behavior_index - 1) % len(behavior_defs)
+        next_index = (behavior_index + 1) % len(behavior_defs)
+
+        # Show behavior names
+        stdscr.addstr(0, 0, f"Previous Behavior: {behavior_defs[prev_index][0]}")
+        stdscr.addstr(1, 0, f"Current Behavior:  {behavior_defs[behavior_index][0]}")
+        stdscr.addstr(2, 0, f"Next Behavior:     {behavior_defs[next_index][0]}")
+
+        stdscr.addstr(4, 0, "→ next | ← previous | space: pause/resume | q: quit")
+
+        if not playing:
+            stdscr.addstr(6, 0, "Status: PAUSED")
+        else:
+            stdscr.addstr(6, 0, "Status: PLAYING")
+
         stdscr.refresh()
 
-        # Wait for a key press (non-blocking)
+        # Execute current behavior once if playing and not yet run
+        if playing and not behavior_executed:
+            behavior_defs[behavior_index][1]()  # Call the behavior function
+            behavior_executed = True
+
         key = stdscr.getch()
 
-        if key == curses.KEY_RIGHT:  # Right arrow key
-            behavior_index = (behavior_index + 1) % len(behaviors)
-        elif key == curses.KEY_LEFT:  # Left arrow key
-            behavior_index = (behavior_index - 1) % len(behaviors)
-        elif key == ord(' '):  # Space key to pause/resume
+        if key == curses.KEY_RIGHT:
+            behavior_index = (behavior_index + 1) % len(behavior_defs)
+            behavior_executed = False
+        elif key == curses.KEY_LEFT:
+            behavior_index = (behavior_index - 1) % len(behavior_defs)
+            behavior_executed = False
+        elif key == ord(' '):
             playing = not playing
-            status = "paused" if not playing else "playing"
-            stdscr.addstr(0, 0, f"Behavior is {status}. Press 'space' to toggle.")
-            stdscr.refresh()
-            continue
-        elif key == ord('q'):  # 'q' to quit
+        elif key == ord('q'):
             break
 
-        # Optional: Add a small delay to avoid overloading the CPU with constant screen refresh
         time.sleep(0.1)
-
 
 '''
 def behavior_playback_control():
       
     # List of behaviors to cycle through
     behaviors = [
-        pointLeftSequential,
-        pointRightSequential,
+        extendLeftSeq,
+        extendRightSeq,
         # Add more behavior functions here
     ]
     
@@ -399,13 +416,16 @@ def manual_control():
         print("1  → Sequential Wave")
         print("2  → Sequential Wave Front to Back Symmetrical Sides")
         print("3  → Sequential Wave Front to Back Symmetrical Sides with 25 cycles")
-        print("4  → Point Left Sequential")
-        print("5  → Point Right Sequential")
+        print("4  → extend Left Sequential")
+        print("5  → extend Right Sequential")
         print("6  → Retract Right Sequential")
         print("7  → Retract Left Sequential")
         print("8  → Extend All Completely")
-        print("9  → prep for Point Left Right Left")
-        print("10  → Point Left Right Left")
+        print("9  → prep for extend Left Right Left")
+        print("10  → extend Left Right Left")
+        print("11  → Buzz")
+        print("12  → Shimmy")
+        print("13  → Resting")
         
         user_input = input(">>> ").strip()
         if user_input.lower() == "q":
