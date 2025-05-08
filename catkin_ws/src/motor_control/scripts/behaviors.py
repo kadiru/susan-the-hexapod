@@ -153,6 +153,53 @@ def extendRightSync(duration, speed, fade_in, fade_out, stop_event):
         time.sleep(sleep_step)
         elapsed += sleep_step
 
+def extendSeq(left_or_right, direction, inter_delay, duration, speed, fade_in, fade_out, stop_event):
+    if left_or_right == "left":
+        # Leg order: 1 (front), 2 (middle), 3 (rear)
+        sequence = [
+            (serial61, 'e2'),  # Leg 1
+            (serial23, 'e1'),  # Leg 2
+            (serial23, 'e2'),  # Leg 3
+            (serial45, 'r1'),  # Retract Leg 4
+            (serial45, 'r2'),  # Retract Leg 5
+            (serial61, 'r1'),  # Retract Leg 6
+        ]
+        label = "Left"
+    elif left_or_right == "right":
+        # Leg order: 6 (front), 5 (middle), 4 (rear)
+        sequence = [
+            (serial61, 'e1'),  # Leg 6
+            (serial45, 'e2'),  # Leg 5
+            (serial45, 'e1'),  # Leg 4
+            (serial23, 'r2'),  # Retract Leg 3
+            (serial23, 'r1'),  # Retract Leg 2
+            (serial61, 'r2'),  # Retract Leg 1
+        ]
+        label = "Right"
+    else:
+        print(f"Invalid value for left_or_right: '{left_or_right}' (expected 'left' or 'right')")
+        return
+
+    if direction == "back_to_front":
+        sequence = list(reversed(sequence))
+        dir_label = "Back to Front"
+    elif direction == "front_to_back":
+        dir_label = "Front to Back"
+    else:
+        print(f"Invalid value for direction: '{direction}' (expected 'front_to_back' or 'back_to_front')")
+        return
+
+    print(f"Extending {label} side — {dir_label} sequence...")
+
+    for serial_x, cmd in sequence:
+        if stop_event.is_set():
+            print(f"extendSeq ({label}, {dir_label}) interrupted.")
+            return
+        send_command(serial_x, cmd, duration, speed, fade_in, fade_out)
+        sleep_interruptibly(inter_delay, stop_event)
+
+    sleep_interruptibly(duration / 1000.0, stop_event)
+
 def extendLeftRightLeft(duration, speed, fade_in, fade_out, stop_event):
     print("extending Left...")
     extendLeftSync(duration, speed, fade_in, fade_out, stop_event)
@@ -315,7 +362,6 @@ def circling_move(duration, speed, fade_in, fade_out, cycles, delay_inter_cycle,
         sleep_interruptibly(duration / 1000.0, stop_event)
         
         sleep_interruptibly(delay_inter_cycle / 1000.0, stop_event)
-        
 
 # Optionally, export a list or dict of behaviors for auto-registration
 ALL_BEHAVIORS = {
@@ -328,9 +374,10 @@ ALL_BEHAVIORS = {
     "shake": partial(shake, duration=125, speed=255, fade_in=50, fade_out=50, numOfShimmies=12),
     "extendAll_2000_60": partial(moveAll, extend_or_retract="extend", duration=2800, speed=80, fade_in=30, fade_out=30),
     "four_count_leg_sequence": partial(four_count_leg_sequence, duration=800, speed=255, fade_in=50, fade_out=50, cycles=1),
-    "circling_move": partial(circling_move, duration=100, speed=255, fade_in=0, fade_out=0, cycles=10, delay_inter_cycle=200),      
+    "circling_move": partial(circling_move, duration=100, speed=255, fade_in=0, fade_out=0, cycles=10, delay_inter_cycle=400),      
     "buzz": partial(shake, duration=100, speed=255, fade_in=50, fade_out=50, numOfShimmies=5),
-    "retractAll": partial(moveAll, extend_or_retract="retract", duration=1800, speed=140, fade_in=100, fade_out=100)    
+    "retractAll": partial(moveAll, extend_or_retract="retract", duration=1800, speed=140, fade_in=100, fade_out=100),
+    "extendRightSeq": partial(extendSeq, left_or_right="left", direction="front_to_back", inter_delay=100, duration=1000, speed=255, fade_in=0, fade_out=0)   
 }
 
 __all__ = ['ALL_BEHAVIORS', 'retractAll']
