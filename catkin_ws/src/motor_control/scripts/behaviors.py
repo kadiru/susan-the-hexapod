@@ -153,52 +153,52 @@ def extendRightSync(duration, speed, fade_in, fade_out, stop_event):
         time.sleep(sleep_step)
         elapsed += sleep_step
 
-def extendSeq(left_or_right, direction, inter_delay, duration, speed, fade_in, fade_out, stop_event):
-    if left_or_right == "left":
-        # Leg order: 1 (front), 2 (middle), 3 (rear)
-        sequence = [
-            (serial61, 'e2'),  # Leg 1
-            (serial23, 'e1'),  # Leg 2
-            (serial23, 'e2'),  # Leg 3
-            (serial45, 'r1'),  # Retract Leg 4
-            (serial45, 'r2'),  # Retract Leg 5
-            (serial61, 'r1'),  # Retract Leg 6
-        ]
-        label = "Left"
-    elif left_or_right == "right":
-        # Leg order: 6 (front), 5 (middle), 4 (rear)
-        sequence = [
-            (serial61, 'e1'),  # Leg 6
-            (serial45, 'e2'),  # Leg 5
-            (serial45, 'e1'),  # Leg 4
-            (serial23, 'r2'),  # Retract Leg 3
-            (serial23, 'r1'),  # Retract Leg 2
-            (serial61, 'r2'),  # Retract Leg 1
-        ]
-        label = "Right"
-    else:
-        print(f"Invalid value for left_or_right: '{left_or_right}' (expected 'left' or 'right')")
+def extendSeq(left_or_right, direction, duration, speed, fade_in, fade_out, inter_delay, stop_event):
+    if left_or_right not in ("left", "right", "both"):
+        print(f"Invalid value for left_or_right: '{left_or_right}' (expected 'left', 'right', or 'both')")
         return
 
+    # Define legs from front to back
+    left_legs = [  # 1 (front), 2 (middle), 3 (rear)
+        (serial61, 'e2'),  # Leg 1
+        (serial23, 'e1'),  # Leg 2
+        (serial23, 'e2'),  # Leg 3
+    ]
+    right_legs = [  # 6 (front), 5 (middle), 4 (rear)
+        (serial61, 'e1'),  # Leg 6
+        (serial45, 'e2'),  # Leg 5
+        (serial45, 'e1'),  # Leg 4
+    ]
+
     if direction == "back_to_front":
-        sequence = list(reversed(sequence))
-        dir_label = "Back to Front"
-    elif direction == "front_to_back":
-        dir_label = "Front to Back"
-    else:
+        left_legs = list(reversed(left_legs))
+        right_legs = list(reversed(right_legs))
+    elif direction != "front_to_back":
         print(f"Invalid value for direction: '{direction}' (expected 'front_to_back' or 'back_to_front')")
         return
 
-    print(f"Extending {label} side — {dir_label} sequence...")
+    # Determine pairs based on chosen side(s)
+    if left_or_right == "left":
+        pairs = [[left] for left in left_legs]
+    elif left_or_right == "right":
+        pairs = [[right] for right in right_legs]
+    else:  # both
+        pairs = list(zip(right_legs, left_legs))  # [(R6, L1), (R5, L2), (R4, L3)]
 
-    for serial_x, cmd in sequence:
+    print(f"Extending '{left_or_right}' legs — {direction.replace('_', ' ').title()} with inter_delay = {inter_delay}s")
+
+    for pair in pairs:
         if stop_event.is_set():
-            print(f"extendSeq ({label}, {dir_label}) interrupted.")
+            print(f"extendSeq interrupted before sending pair: {pair}")
             return
-        send_command(serial_x, cmd, duration, speed, fade_in, fade_out)
-        sleep_interruptibly(inter_delay, stop_event)
+
+        for serial_x, cmd in pair:
+            send_command(serial_x, cmd, duration, speed, fade_in, fade_out)
+
+        sleep_interruptibly(inter_delay / 1000.0, stop_event)
 
     sleep_interruptibly(duration / 1000.0, stop_event)
+
 
 def extendLeftRightLeft(duration, speed, fade_in, fade_out, stop_event):
     print("extending Left...")
@@ -245,9 +245,9 @@ def waveFrontToBackSync(cycles, each_leg_duration, speed, fade_in, fade_out, sto
         print(f"\nCycle {cycle + 1} of {cycles} — Extending Wave")
 
         if cycle < 3:
-            extend_duration = each_leg_duration // 2
+            extend_duration = each_leg_duration // 1.5
             retract_duration = each_leg_duration
-            extend_speed = min(255, int(speed * 2.5))
+            extend_speed = min(255, int(speed * 2))
         else:
             extend_duration = each_leg_duration
             retract_duration = each_leg_duration
@@ -365,19 +365,28 @@ def circling_move(duration, speed, fade_in, fade_out, cycles, delay_inter_cycle,
 
 # Optionally, export a list or dict of behaviors for auto-registration
 ALL_BEHAVIORS = {
-    "waveFrontToBackSync": partial(waveFrontToBackSync, cycles= 20, each_leg_duration=750, speed=100, fade_in=100, fade_out=100),
+    "waveFrontToBackSync": partial(waveFrontToBackSync, cycles= 12, each_leg_duration=1000, speed=150, fade_in=100, fade_out=100),
     "extendRightSync": partial(extendRightSync, duration=1500, speed=125, fade_in=0, fade_out=0),
     "extendLeftSync": partial(extendLeftSync, duration=1500, speed=125, fade_in=0, fade_out=0),
-    "extendAll": partial(moveAll, extend_or_retract="extend", duration=1800, speed=140, fade_in=100, fade_out=100),
-    "prepForLeftRightLeft": partial(moveAll, extend_or_retract="retract", duration=1000, speed=80, fade_in=40, fade_out=40),
+    "extendAll": partial(moveAll, extend_or_retract="extend", duration=2000, speed=140, fade_in=100, fade_out=100),
+    "retractAll_1800_140": partial(moveAll, extend_or_retract="retract", duration=1800, speed=140, fade_in=100, fade_out=100),
+    "four_count_leg_sequence": partial(four_count_leg_sequence, duration=600, speed=255, fade_in=20, fade_out=20, cycles=2),
+    "prepForLeftRightLeft": partial(moveAll, extend_or_retract="extend", duration=600, speed=100, fade_in=40, fade_out=40),
     "extendLeftRightLeft": partial(extendLeftRightLeft, duration=500, speed=255, fade_in=100, fade_out=100),
-    "shake": partial(shake, duration=125, speed=255, fade_in=50, fade_out=50, numOfShimmies=12),
+    "circling_move_250": partial(circling_move, duration=250, speed=255, fade_in=0, fade_out=0, cycles=1, delay_inter_cycle=400),      
+    "shake": partial(shake, duration=125, speed=255, fade_in=30, fade_out=30, numOfShimmies=16),
     "extendAll_2000_60": partial(moveAll, extend_or_retract="extend", duration=2800, speed=80, fade_in=30, fade_out=30),
-    "four_count_leg_sequence": partial(four_count_leg_sequence, duration=800, speed=255, fade_in=50, fade_out=50, cycles=1),
-    "circling_move": partial(circling_move, duration=100, speed=255, fade_in=0, fade_out=0, cycles=10, delay_inter_cycle=400),      
-    "buzz": partial(shake, duration=100, speed=255, fade_in=50, fade_out=50, numOfShimmies=5),
     "retractAll": partial(moveAll, extend_or_retract="retract", duration=1800, speed=140, fade_in=100, fade_out=100),
-    "extendRightSeq": partial(extendSeq, left_or_right="left", direction="front_to_back", inter_delay=100, duration=1000, speed=255, fade_in=0, fade_out=0)   
+    "extendAll_600_255": partial(moveAll, extend_or_retract="extend", duration=600, speed=255, fade_in=100, fade_out=100),
+    "extendAll_2_600_255": partial(moveAll, extend_or_retract="extend", duration=600, speed=255, fade_in=100, fade_out=100),
+    "retractAll_255": partial(moveAll, extend_or_retract="retract", duration=800, speed=255, fade_in=20, fade_out=20),
+    "extendBothSeq_dur_800_inter_150_sp_255": partial(extendSeq, left_or_right="both", direction="front_to_back", inter_delay=150, duration=800, speed=255, fade_in=0, fade_out=0),
+    "retractAll_100": partial(moveAll, extend_or_retract="retract", duration=2000, speed=90, fade_in=10, fade_out=10),
+    "extendLeftSeq_dur_800_inter_150_sp_255": partial(extendSeq, left_or_right="left", direction="front_to_back", inter_delay=150, duration=800, speed=255, fade_in=0, fade_out=0),
+    "extendRightSeq_dur_800_inter_150_sp_255": partial(extendSeq, left_or_right="right", direction="front_to_back", inter_delay=150, duration=800, speed=255, fade_in=0, fade_out=0),
+    "retractAll_255_fast": partial(moveAll, extend_or_retract="retract", duration=800, speed=255, fade_in=0, fade_out=0),
+    "circling_move": partial(circling_move, duration=100, speed=255, fade_in=0, fade_out=0, cycles=10, delay_inter_cycle=400),
+    "buzz": partial(shake, duration=100, speed=255, fade_in=50, fade_out=50, numOfShimmies=5)
 }
 
 __all__ = ['ALL_BEHAVIORS', 'retractAll']

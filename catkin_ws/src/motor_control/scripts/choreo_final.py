@@ -59,6 +59,53 @@ def extendRightSeq(duration, speed, fade_in, fade_out):
         send_command(serial_left, cmd_left, duration, speed, fade_in, fade_out)
         time.sleep(delay_between_pairs)
 
+def extendSeq(left_or_right, direction, inter_delay, duration, speed, fade_in, fade_out, stop_event):
+    if left_or_right == "left":
+        # Leg order: 1 (front), 2 (middle), 3 (rear)
+        sequence = [
+            (serial61, 'e2'),  # Leg 1
+            (serial23, 'e1'),  # Leg 2
+            (serial23, 'e2'),  # Leg 3
+            (serial45, 'r1'),  # Retract Leg 4
+            (serial45, 'r2'),  # Retract Leg 5
+            (serial61, 'r1'),  # Retract Leg 6
+        ]
+        label = "Left"
+    elif left_or_right == "right":
+        # Leg order: 6 (front), 5 (middle), 4 (rear)
+        sequence = [
+            (serial61, 'e1'),  # Leg 6
+            (serial45, 'e2'),  # Leg 5
+            (serial45, 'e1'),  # Leg 4
+            (serial23, 'r2'),  # Retract Leg 3
+            (serial23, 'r1'),  # Retract Leg 2
+            (serial61, 'r2'),  # Retract Leg 1
+        ]
+        label = "Right"
+    else:
+        print(f"Invalid value for left_or_right: '{left_or_right}' (expected 'left' or 'right')")
+        return
+
+    if direction == "back_to_front":
+        sequence = list(reversed(sequence))
+        dir_label = "Back to Front"
+    elif direction == "front_to_back":
+        dir_label = "Front to Back"
+    else:
+        print(f"Invalid value for direction: '{direction}' (expected 'front_to_back' or 'back_to_front')")
+        return
+
+    print(f"Extending {label} side — {dir_label} sequence...")
+
+    for serial_x, cmd in sequence:
+        if stop_event.is_set():
+            print(f"extendSeq ({label}, {dir_label}) interrupted.")
+            return
+        send_command(serial_x, cmd, duration, speed, fade_in, fade_out)
+        sleep_interruptibly(inter_delay, stop_event)
+
+    sleep_interruptibly(duration / 1000.0, stop_event)
+
 def extendLeftSync(duration, speed, fade_in, fade_out):
     send_command(serial61, 'e2', duration, speed, fade_in, fade_out)
     send_command(serial23, 'e1', duration, speed, fade_in, fade_out)
