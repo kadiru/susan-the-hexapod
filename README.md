@@ -1,44 +1,51 @@
-# Susan the Hexapod
+# A robot becomes a dance partner.
 
-Susan is a six-legged robot adapted for **Kinematic / Kinesthetic**, a May 2025 production by AXIS Dance Company led by artist Ben Levine. This repository preserves the original ROS and Arduino walking system and documents Kadir Uyanik’s work to get Susan moving again and ready for live choreography.
+**Susan the Hexapod** was adapted for *Kinematic / Kinesthetic*, AXIS Dance Company's May 2025 production led by artist Ben Levine. The engineering goal was practical: restore a damaged robot and make its movements reliable, readable and playable as live performance cues.
 
-[Watch the robot adaptation and performance](https://vimeo.com/kadiru/hexapod-with-dancers) · [AXIS production and credits](https://axisdance.org/kinematic/)
+[![Susan moving its legs during the AXIS performance](docs/showcase/performance.gif)](https://vimeo.com/kadiru/hexapod-with-dancers)
 
-## What changed for the stage
+*Real stage footage from the owner's performance film; the excerpt is cropped and plays at its original speed. Susan rides on a wheeled base moved by the dancers. This is choreographed, operator-cued motion.*
 
-1. **Restore actuator control.** Susan arrived with disconnected wires and no wiring diagram. Kadir traced the actuator wiring against the controller pin assignments, made a wiring map, and restored movement.
-2. **Put the load on wheels.** Two legs had broken during earlier tests under the robot’s own weight. The chassis was adapted to ride on a wheeled base, so the platform carried the load and the powered legs could move above the floor. The dancers could move the platform as part of the piece.
-3. **Rebuild the control software.** A Raspberry Pi sequences the motions and sends timed serial commands to three Arduino boards. Each board drives a pair of linear actuators. The new firmware supports extension and retraction, speed, and gradual starts and stops.
-4. **Make movements playable as cues.** Nadia Adame’s rehearsal notes and work with the AXIS team shaped the wave, shimmy, and extension sequences. By the first show, the repertoire had grown from one walking gait to about 15 stage movements. The operator could select a cue, interrupt its sequence, or ask the legs to retract. The team tested movements remotely with a studio camera; Kadir also prototyped extensions to make the short leg movements visible from the audience.
+[Watch the adaptation and performance](https://vimeo.com/kadiru/hexapod-with-dancers) · [AXIS production credits](https://axisdance.org/kinematic/)
 
-Susan performed at the Exploratorium on May 8 and 10 and at Stanford Live on May 21: four performances at two venues.
+<a name="what-changed-for-the-stage"></a>
 
-## How the performance controls fit together
+## From damaged hardware to stage cues
+
+Kadir traced disconnected actuator wiring, documented the board-to-leg mapping, restored movement, rewrote the Arduino performance firmware, and built Raspberry Pi cue controls. A wheeled base carried the robot's weight so its powered legs could move above the floor.
+
+Rehearsals with Nadia Adame and the AXIS team shaped waves, shimmies and extensions. The repertoire grew from one walking gait to about 15 stage movements by the first show. Susan appeared in **four performances at the Exploratorium and Stanford Live**. [Adaptation notes and dates](docs/STAGE_GUIDE.md#what-changed-for-the-stage)
+
+<a name="how-the-performance-controls-fit-together"></a>
+
+## The central idea
 
 ```mermaid
 flowchart LR
-    Operator["Operator selects a cue"] --> Pi["Raspberry Pi sequences movement"]
-    Pi -->|USB serial| Boards["Three Arduino boards"]
-    Boards --> Legs["Six linear actuators"]
+    O["Operator selects or interrupts cue"] --> P["Pi sequences duration, speed and ramp"]
+    P -->|USB serial| A["Three Arduino boards"]
+    A --> L["Six linear actuators"]
 ```
 
-The stage control scripts use Python and pySerial; the menu uses `curses`. A cue combines movements with duration, speed and ramp settings. Interruption stops the rest of the software sequence; an actuator command already sent is timed by the firmware.
+The software makes a movement selectable and repeatable. Interrupting a sequence stops future cue commands; a command already sent still follows its firmware timing. Original walking firmware and stage firmware use different command formats.
 
-## What’s in this repository
+<a name="whats-in-this-repository"></a>
 
-| Path | What to look for |
+## Read the code
+
+| Follow a cue | Entry point |
 | --- | --- |
-| [`arduino/`](arduino/) | The `*_leg_control_script` sketches for the original walking system and the `*_linear_actuator_control` sketches for timed performance movements. |
-| [`interactive_menu.py`](catkin_ws/src/motor_control/scripts/interactive_menu.py) and [`behavior_manager.py`](catkin_ws/src/motor_control/scripts/behavior_manager.py) | Terminal cue selection, playback, interruption, and retraction. |
-| [`behaviors.py`](catkin_ws/src/motor_control/scripts/behaviors.py) | The motion library: waves, shimmies, synchronized extensions, and timed sequences with different presets. |
-| [`choreo_final.py`](catkin_ws/src/motor_control/scripts/choreo_final.py) | A standalone stage controller with manual behavior IDs and keyboard playback. |
-| [`catkin_ws/`](catkin_ws/) and [original walking instructions](instructions_to_run_walking_robot.txt) | The inherited ROS 1 joystick and motor-control workflow. The performance scripts live inside this tree but send serial commands directly. |
-| [Motor assignments](instructions_motor_arduino_connections.txt) and [stepper wiring notes](instructions_to_wire_stepper_motor_drivers.txt) | The board-to-leg mapping and reference notes for the original hardware. |
+| Selection and playback | [Interactive menu](catkin_ws/src/motor_control/scripts/interactive_menu.py) · [Behavior manager](catkin_ws/src/motor_control/scripts/behavior_manager.py) |
+| Movement vocabulary | [Motion library](catkin_ws/src/motor_control/scripts/behaviors.py) |
+| Standalone stage controller | [Final choreography controller](catkin_ws/src/motor_control/scripts/choreo_final.py) |
+| Timed actuator control | [Arduino sketches](arduino/) · [Motor assignments](instructions_motor_arduino_connections.txt) |
 
-Start with `interactive_menu.py` and `behaviors.py` to trace a stage cue from selection to motor command. The scripts open hardware-specific serial devices, and the walking and performance sketches use different command formats. Check the firmware and board mapping before connecting a rebuilt unit.
+For review, trace one behavior from the menu through the motion library to a serial command. Running the scripts opens hardware-specific serial devices. Rebuilding the system requires the correct board mapping and matching firmware; the [stage guide](docs/STAGE_GUIDE.md) retains the original walking and wiring references.
 
-## Credits
+<a name="credits"></a>
 
-- **Original hexapod development:** engineering students at Carnegie Mellon University and the University of Maryland working with Ben Levine.
-- **Production:** AXIS Dance Company; Ben Levine, lead artist; Nadia Adame, artistic director; AXIS dancers and rehearsal team.
-- **Stage adaptation:** Kadir Uyanik, robotics engineering, robot choreography, and live teleoperation.
+## Credits and future work
+
+Original hexapod: engineering students at Carnegie Mellon University and the University of Maryland, working with Ben Levine. Production: AXIS Dance Company; Ben Levine, lead artist; Nadia Adame, artistic director; dancers and rehearsal team. **Kadir Uyanik:** stage adaptation, robotics engineering, robot choreography and live teleoperation.
+
+This is a completed performance archive. A future revival would begin by revalidating the mechanical setup, firmware protocol and cue interruption behavior before rehearsals.
